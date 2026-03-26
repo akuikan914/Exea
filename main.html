@@ -614,3 +614,157 @@
     async function closeIncident() {
       const body = {
         ticket_id: els.incidentTicketId.value || "",
+        notes: els.incidentNote.value || "closed-from-exea",
+      };
+      const r = await jpost("/incident/close", body);
+      if (!r.ok) throw new Error(r.error || "incident close failed");
+      await refreshAll();
+    }
+
+    async function evaluateSignal() {
+      const body = {
+        account: els.signalAccount.value || "",
+        session_id: els.signalSessionId.value || "",
+        signal: els.signalName.value || "exea-manual-evaluation",
+        intensity: Number(els.signalIntensity.value || 700),
+      };
+      const r = await jpost("/signal/evaluate", body);
+      if (!r.ok) throw new Error(r.error || "signal evaluate failed");
+      await refreshAll();
+    }
+
+    async function autoTunePolicies() {
+      const r = await jpost("/policy/autotune", {});
+      if (!r.ok) throw new Error(r.error || "autotune failed");
+      els.maintenanceBox.textContent = JSON.stringify(r, null, 2);
+      await refreshAll();
+    }
+
+    async function compactState() {
+      const r = await jpost("/state/compact", {});
+      if (!r.ok) throw new Error(r.error || "compact failed");
+      els.maintenanceBox.textContent = JSON.stringify(r, null, 2);
+      await refreshAll();
+    }
+
+    const feedLines = [
+      "atlas-001|dns-tunnel-wave|710|flag",
+      "atlas-002|dns-tunnel-wave|717|flag",
+      "atlas-003|dns-tunnel-wave|724|flag",
+      "atlas-004|dns-tunnel-wave|731|flag",
+      "atlas-005|dns-tunnel-wave|738|flag",
+      "atlas-006|dns-tunnel-wave|745|flag",
+      "atlas-007|dns-tunnel-wave|752|flag",
+      "atlas-008|dns-tunnel-wave|759|flag",
+      "atlas-009|dns-tunnel-wave|766|flag",
+      "atlas-010|dns-tunnel-wave|773|flag",
+      "atlas-011|proxy-shadow|780|flag",
+      "atlas-012|proxy-shadow|787|flag",
+      "atlas-013|proxy-shadow|794|flag",
+      "atlas-014|proxy-shadow|801|block",
+      "atlas-015|proxy-shadow|808|block",
+      "atlas-016|proxy-shadow|815|block",
+      "atlas-017|proxy-shadow|822|block",
+      "atlas-018|proxy-shadow|829|block",
+      "atlas-019|proxy-shadow|836|block",
+      "atlas-020|proxy-shadow|843|block",
+      "atlas-021|mesh-ghost|850|block",
+      "atlas-022|mesh-ghost|857|block",
+      "atlas-023|mesh-ghost|864|block",
+      "atlas-024|mesh-ghost|871|block",
+      "atlas-025|mesh-ghost|878|block",
+      "atlas-026|mesh-ghost|885|block",
+      "atlas-027|mesh-ghost|892|block",
+      "atlas-028|mesh-ghost|899|block",
+      "atlas-029|mesh-ghost|906|block",
+      "atlas-030|mesh-ghost|913|block",
+      "atlas-031|relay-hop|620|watch",
+      "atlas-032|relay-hop|627|watch",
+      "atlas-033|relay-hop|634|watch",
+      "atlas-034|relay-hop|641|watch",
+      "atlas-035|relay-hop|648|watch",
+      "atlas-036|relay-hop|655|watch",
+      "atlas-037|relay-hop|662|watch",
+      "atlas-038|relay-hop|669|watch",
+      "atlas-039|relay-hop|676|watch",
+      "atlas-040|relay-hop|683|watch"
+    ];
+    window.ExeaThreatAtlas = Object.freeze(feedLines);
+    const signatureAtlasExtended = [
+      "atlas-ext-001|dns-tunnel|681|watch|652",
+      "atlas-ext-002|dns-tunnel|688|watch|657",
+      "atlas-ext-003|dns-tunnel|695|watch|662",
+      "atlas-ext-004|dns-tunnel|702|flag|668",
+      "atlas-ext-005|dns-tunnel|709|flag|674",
+      "atlas-ext-006|dns-tunnel|716|flag|680",
+      "atlas-ext-007|dns-tunnel|723|flag|686",
+      "atlas-ext-008|dns-tunnel|730|flag|692",
+      "atlas-ext-009|dns-tunnel|737|flag|698",
+      "atlas-ext-010|dns-tunnel|744|flag|704",
+      "atlas-ext-011|dns-tunnel|751|flag|710",
+      "atlas-ext-012|dns-tunnel|758|flag|716",
+      "atlas-ext-013|dns-tunnel|765|flag|722",
+      "atlas-ext-014|dns-tunnel|772|flag|728",
+      "atlas-ext-015|dns-tunnel|779|flag|734",
+      "atlas-ext-016|proxy-shadow|786|flag|740",
+      "atlas-ext-017|proxy-shadow|793|flag|746",
+      "atlas-ext-018|proxy-shadow|800|block|752",
+      "atlas-ext-019|proxy-shadow|807|block|758",
+      "atlas-ext-020|proxy-shadow|814|block|764",
+      "atlas-ext-021|proxy-shadow|821|block|770",
+      "atlas-ext-022|proxy-shadow|828|block|776",
+      "atlas-ext-023|proxy-shadow|835|block|782",
+      "atlas-ext-024|proxy-shadow|842|block|788",
+      "atlas-ext-025|proxy-shadow|849|block|794",
+      "atlas-ext-026|proxy-shadow|856|block|800",
+      "atlas-ext-027|mesh-ghost|863|block|806",
+      "atlas-ext-028|mesh-ghost|870|block|812",
+      "atlas-ext-029|mesh-ghost|877|block|818",
+      "atlas-ext-030|mesh-ghost|884|block|824",
+      "atlas-ext-031|mesh-ghost|891|block|830",
+      "atlas-ext-032|mesh-ghost|898|block|836",
+      "atlas-ext-033|mesh-ghost|905|block|842",
+      "atlas-ext-034|mesh-ghost|912|block|848",
+      "atlas-ext-035|mesh-ghost|919|block|854",
+      "atlas-ext-036|mesh-ghost|926|block|860",
+      "atlas-ext-037|relay-hop|603|watch|588",
+      "atlas-ext-038|relay-hop|610|watch|593",
+      "atlas-ext-039|relay-hop|617|watch|598",
+      "atlas-ext-040|relay-hop|624|watch|603",
+      "atlas-ext-041|relay-hop|631|watch|608",
+      "atlas-ext-042|relay-hop|638|watch|613",
+      "atlas-ext-043|relay-hop|645|watch|618",
+      "atlas-ext-044|relay-hop|652|watch|623",
+      "atlas-ext-045|relay-hop|659|watch|628",
+      "atlas-ext-046|relay-hop|666|watch|633",
+      "atlas-ext-047|relay-hop|673|watch|638",
+      "atlas-ext-048|relay-hop|680|watch|643",
+      "atlas-ext-049|relay-hop|687|watch|648",
+      "atlas-ext-050|relay-hop|694|watch|653",
+      "atlas-ext-051|relay-hop|701|flag|658",
+      "atlas-ext-052|relay-hop|708|flag|663",
+      "atlas-ext-053|relay-hop|715|flag|668",
+      "atlas-ext-054|relay-hop|722|flag|673",
+      "atlas-ext-055|relay-hop|729|flag|678",
+      "atlas-ext-056|relay-hop|736|flag|683",
+      "atlas-ext-057|ttl-morph|590|watch|570",
+      "atlas-ext-058|ttl-morph|597|watch|575",
+      "atlas-ext-059|ttl-morph|604|watch|580",
+      "atlas-ext-060|ttl-morph|611|watch|585",
+      "atlas-ext-061|ttl-morph|618|watch|590",
+      "atlas-ext-062|ttl-morph|625|watch|595",
+      "atlas-ext-063|ttl-morph|632|watch|600",
+      "atlas-ext-064|ttl-morph|639|watch|605",
+      "atlas-ext-065|ttl-morph|646|watch|610",
+      "atlas-ext-066|ttl-morph|653|watch|615",
+      "atlas-ext-067|ttl-morph|660|watch|620",
+      "atlas-ext-068|ttl-morph|667|watch|625",
+      "atlas-ext-069|ttl-morph|674|watch|630",
+      "atlas-ext-070|ttl-morph|681|watch|635",
+      "atlas-ext-071|ttl-morph|688|watch|640",
+      "atlas-ext-072|ttl-morph|695|watch|645",
+      "atlas-ext-073|egress-fork|702|flag|650",
+      "atlas-ext-074|egress-fork|709|flag|656",
+      "atlas-ext-075|egress-fork|716|flag|662",
+      "atlas-ext-076|egress-fork|723|flag|668",
+      "atlas-ext-077|egress-fork|730|flag|674",
