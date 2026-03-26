@@ -460,3 +460,157 @@
             <td class="mono">${escapeHtml(n.endpoint)}</td>
             <td>${n.quality}</td>
             <td>${n.health}</td>
+            <td>${n.malware_bps}</td>
+            <td>${online}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderEvents(events) {
+      if (!events || !events.length) {
+        els.logBox.textContent = "No events yet.";
+        return;
+      }
+      const lines = events.slice(-120).map(ev => {
+        const t = new Date((ev.ts || 0) * 1000).toISOString();
+        return `${t} | ${String(ev.channel).padEnd(8)} | ${String(ev.severity).padEnd(8)} | ${JSON.stringify(ev.payload)}`;
+      });
+      els.logBox.textContent = lines.join("\n");
+      els.logBox.scrollTop = els.logBox.scrollHeight;
+    }
+
+    function renderIncidents(incidents) {
+      if (!incidents || !incidents.length) {
+        els.incidentsBody.innerHTML = `<tr><td class="muted" colspan="6">No incidents</td></tr>`;
+        return;
+      }
+      els.incidentsBody.innerHTML = incidents.slice(0, 120).map(i => {
+        const sev = i.severity === "critical" ? "bad" : (i.severity === "high" ? "warn" : "good");
+        const chip = fmtChip(i.severity, sev);
+        const status = i.status === "closed" ? fmtChip("closed", "good") : fmtChip("open", "warn");
+        return `
+          <tr>
+            <td class="mono">${escapeHtml(i.ticket_id)}</td>
+            <td>${chip}</td>
+            <td class="mono">${escapeHtml(i.account)}</td>
+            <td class="mono">${escapeHtml(i.session_id)}</td>
+            <td>${escapeHtml(i.signal || "-")}</td>
+            <td>${status}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderPolicies(policies) {
+      if (!policies || !policies.length) {
+        els.policiesBody.innerHTML = `<tr><td class="muted" colspan="5">No policies</td></tr>`;
+        return;
+      }
+      els.policiesBody.innerHTML = policies.slice(0, 220).map(p => {
+        const enabled = p.enabled ? fmtChip("true", "good") : fmtChip("false", "bad");
+        return `
+          <tr>
+            <td class="mono">${escapeHtml(p.name)}</td>
+            <td>${p.threshold}</td>
+            <td>${escapeHtml(p.action)}</td>
+            <td>${p.cooldown_sec}</td>
+            <td>${enabled}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderTelemetry(telemetry) {
+      const rows = (telemetry && telemetry.rollups) ? telemetry.rollups : [];
+      if (!rows.length) {
+        els.telemetryBox.textContent = "No telemetry yet.";
+        return;
+      }
+      const lines = rows.slice(-120).map(r => {
+        const t = new Date((r.at || 0) * 1000).toISOString();
+        return `${t} | ${r.scan_id} | active=${r.active_sessions} flagged=${r.flagged_sessions} | digest=${r.digest}`;
+      });
+      els.telemetryBox.textContent = lines.join("\n");
+      els.telemetryBox.scrollTop = els.telemetryBox.scrollHeight;
+    }
+
+    function renderSignatures(rows) {
+      if (!rows || !rows.length) {
+        els.signatureBody.innerHTML = `<tr><td class="muted" colspan="5">No signatures</td></tr>`;
+        return;
+      }
+      els.signatureBody.innerHTML = rows.slice(0, 300).map(r => `
+        <tr>
+          <td class="mono">${escapeHtml(r.signature_id)}</td>
+          <td>${escapeHtml(r.family)}</td>
+          <td>${r.confidence}</td>
+          <td>${escapeHtml(r.action)}</td>
+          <td>${r.score}</td>
+        </tr>
+      `).join("");
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    async function refreshAll() {
+      try {
+        const [healthRes, nodesRes, eventsRes, incidentsRes, policiesRes, telemetryRes, signatureRes] = await Promise.all([
+          jget("/health"),
+          jget("/nodes"),
+          jget("/events"),
+          jget("/incidents"),
+          jget("/policies"),
+          jget("/telemetry"),
+          jget("/signatures"),
+        ]);
+        fmtStatus(true);
+
+        const h = healthRes.health || {};
+        els.riskScore.textContent = h.risk_score ?? "-";
+        els.riskBucket.textContent = `bucket ${h.risk_bucket ?? "-"}`;
+        els.nodesOnline.textContent = h.nodes_online ?? "-";
+        els.nodesTotal.textContent = `of ${h.nodes_total ?? "-"} total`;
+        els.sessionsActive.textContent = h.sessions_active ?? "-";
+        els.sessionsFlagged.textContent = `flagged ${h.sessions_flagged ?? "-"}`;
+        els.uptime.textContent = h.uptime_seconds ?? "-";
+
+        renderNodes(nodesRes.nodes || []);
+        renderEvents(eventsRes.events || []);
+        renderIncidents(incidentsRes.incidents || []);
+        renderPolicies(policiesRes.policies || []);
+        renderTelemetry(telemetryRes.telemetry || {});
+        renderSignatures(signatureRes.signatures || []);
+      } catch (err) {
+        fmtStatus(false);
+        els.logBox.textContent = "Unable to connect to NullifierESC API.\n\n" + String(err);
+      }
+    }
+
+    async function runScan() {
+      const r = await jpost("/scan/run", {});
+      if (!r.ok) throw new Error(r.error || "scan failed");
+      await refreshAll();
+    }
+
+    async function updatePolicy() {
+      const body = {
+        name: els.policyName.value || "",
+        threshold: Number(els.policyThreshold.value || 700),
+        action: (els.policyAction.value || "watch").toLowerCase(),
+        enabled: true,
+      };
+      const r = await jpost("/policy/update", body);
+      if (!r.ok) throw new Error(r.error || "policy update failed");
+      await refreshAll();
+    }
+
+    async function closeIncident() {
+      const body = {
+        ticket_id: els.incidentTicketId.value || "",
