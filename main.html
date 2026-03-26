@@ -306,3 +306,157 @@
           <thead>
             <tr>
               <th>Name</th>
+              <th>Threshold</th>
+              <th>Action</th>
+              <th>Cooldown</th>
+              <th>Enabled</th>
+            </tr>
+          </thead>
+          <tbody id="policiesBody">
+            <tr><td class="muted" colspan="5">No policy data</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="card panel-side">
+        <h2>Telemetry Rollups</h2>
+        <div class="log" id="telemetryBox">No telemetry yet.</div>
+      </article>
+
+      <article class="card panel-wide">
+        <h2>Signature Feed</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Signature ID</th>
+              <th>Family</th>
+              <th>Confidence</th>
+              <th>Action</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="signatureBody">
+            <tr><td class="muted" colspan="5">No signatures loaded</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="card panel-side">
+        <h2>Maintenance</h2>
+        <div class="actions">
+          <button id="btnAutoTune">Auto Tune Policies</button>
+          <button id="btnCompact">Compact State</button>
+        </div>
+        <div class="log" id="maintenanceBox">Maintenance results appear here.</div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    /*
+      Exea UI action map
+      ------------------
+      Read refresh cycle:
+      - /health, /nodes, /events, /incidents, /policies, /telemetry, /signatures
+
+      Operator actions:
+      - Register Node      -> /node/register
+      - Open Session       -> /session/open
+      - Flag Session       -> /session/flag
+      - Evaluate Signal    -> /signal/evaluate
+      - Update Policy      -> /policy/update
+      - Run Periodic Scan  -> /scan/run
+      - Auto Tune Policies -> /policy/autotune
+      - Compact State      -> /state/compact
+      - Close Incident     -> /incident/close
+    */
+    const API = "http://127.0.0.1:8794";
+
+    const els = {
+      apiStatus: document.getElementById("apiStatus"),
+      riskScore: document.getElementById("riskScore"),
+      riskBucket: document.getElementById("riskBucket"),
+      nodesOnline: document.getElementById("nodesOnline"),
+      nodesTotal: document.getElementById("nodesTotal"),
+      sessionsActive: document.getElementById("sessionsActive"),
+      sessionsFlagged: document.getElementById("sessionsFlagged"),
+      uptime: document.getElementById("uptime"),
+      nodesBody: document.getElementById("nodesBody"),
+      logBox: document.getElementById("logBox"),
+      nodeRegion: document.getElementById("nodeRegion"),
+      nodeEndpoint: document.getElementById("nodeEndpoint"),
+      nodeQuality: document.getElementById("nodeQuality"),
+      nodeHealth: document.getElementById("nodeHealth"),
+      nodeMalware: document.getElementById("nodeMalware"),
+      sessionAccount: document.getElementById("sessionAccount"),
+      sessionNodeId: document.getElementById("sessionNodeId"),
+      sessionTtl: document.getElementById("sessionTtl"),
+      sessionCollateral: document.getElementById("sessionCollateral"),
+      flagSessionId: document.getElementById("flagSessionId"),
+      flagSignal: document.getElementById("flagSignal"),
+      flagConfidence: document.getElementById("flagConfidence"),
+      btnRegisterNode: document.getElementById("btnRegisterNode"),
+      btnOpenSession: document.getElementById("btnOpenSession"),
+      btnFlagSession: document.getElementById("btnFlagSession"),
+      btnRefresh: document.getElementById("btnRefresh"),
+      incidentsBody: document.getElementById("incidentsBody"),
+      policiesBody: document.getElementById("policiesBody"),
+      telemetryBox: document.getElementById("telemetryBox"),
+      policyName: document.getElementById("policyName"),
+      policyThreshold: document.getElementById("policyThreshold"),
+      policyAction: document.getElementById("policyAction"),
+      incidentTicketId: document.getElementById("incidentTicketId"),
+      incidentNote: document.getElementById("incidentNote"),
+      signalAccount: document.getElementById("signalAccount"),
+      signalSessionId: document.getElementById("signalSessionId"),
+      signalName: document.getElementById("signalName"),
+      signalIntensity: document.getElementById("signalIntensity"),
+      btnRunScan: document.getElementById("btnRunScan"),
+      btnUpdatePolicy: document.getElementById("btnUpdatePolicy"),
+      btnCloseIncident: document.getElementById("btnCloseIncident"),
+      btnEvaluateSignal: document.getElementById("btnEvaluateSignal"),
+      signatureBody: document.getElementById("signatureBody"),
+      btnAutoTune: document.getElementById("btnAutoTune"),
+      btnCompact: document.getElementById("btnCompact"),
+      maintenanceBox: document.getElementById("maintenanceBox"),
+    };
+
+    async function jget(path) {
+      const r = await fetch(API + path, { method: "GET" });
+      if (!r.ok) throw new Error("GET " + path + " failed");
+      return r.json();
+    }
+
+    async function jpost(path, body) {
+      const r = await fetch(API + path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) throw new Error("POST " + path + " failed");
+      return r.json();
+    }
+
+    function fmtStatus(ok) {
+      els.apiStatus.textContent = ok ? "API: online" : "API: offline";
+      els.apiStatus.style.color = ok ? "var(--good)" : "var(--bad)";
+    }
+
+    function fmtChip(text, kind) {
+      return `<span class="chip ${kind}">${text}</span>`;
+    }
+
+    function renderNodes(nodes) {
+      if (!nodes || !nodes.length) {
+        els.nodesBody.innerHTML = `<tr><td class="muted" colspan="7">No nodes registered</td></tr>`;
+        return;
+      }
+      els.nodesBody.innerHTML = nodes.map(n => {
+        const online = n.online ? fmtChip("online", "good") : fmtChip("offline", "bad");
+        return `
+          <tr>
+            <td class="mono">${escapeHtml(n.node_id)}</td>
+            <td>${escapeHtml(n.region)}</td>
+            <td class="mono">${escapeHtml(n.endpoint)}</td>
+            <td>${n.quality}</td>
+            <td>${n.health}</td>
