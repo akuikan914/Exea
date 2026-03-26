@@ -152,3 +152,157 @@
       color: var(--txt);
       border: 1px solid #1e2f4f;
       border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 12px;
+      outline: none;
+    }
+    input:focus { border-color: #3b5b92; }
+    .footer-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    @media (max-width: 1050px) {
+      .kpi { grid-column: span 6; }
+      .panel-wide, .panel-side { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="brand">
+        <h1>Exea // BitGuardoX Control Surface</h1>
+        <p>Web3 VPN session analytics and anti-malware quarantine orchestration</p>
+      </div>
+      <div class="status-pill" id="apiStatus">API: connecting...</div>
+    </div>
+
+    <section class="grid">
+      <article class="card kpi">
+        <h2>Risk Score</h2>
+        <div class="value" id="riskScore">-</div>
+        <div class="meta" id="riskBucket">bucket -</div>
+      </article>
+      <article class="card kpi">
+        <h2>Nodes Online</h2>
+        <div class="value" id="nodesOnline">-</div>
+        <div class="meta" id="nodesTotal">of - total</div>
+      </article>
+      <article class="card kpi">
+        <h2>Active Sessions</h2>
+        <div class="value" id="sessionsActive">-</div>
+        <div class="meta" id="sessionsFlagged">flagged -</div>
+      </article>
+      <article class="card kpi">
+        <h2>Uptime</h2>
+        <div class="value" id="uptime">-</div>
+        <div class="meta">seconds</div>
+      </article>
+
+      <article class="card panel-wide">
+        <h2>Relay Nodes</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Node ID</th>
+              <th>Region</th>
+              <th>Endpoint</th>
+              <th>Quality</th>
+              <th>Health</th>
+              <th>Malware bps</th>
+              <th>Online</th>
+            </tr>
+          </thead>
+          <tbody id="nodesBody">
+            <tr><td class="muted" colspan="7">No data</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="card panel-side">
+        <h2>Operator Actions</h2>
+        <div class="inputs">
+          <input id="nodeRegion" placeholder="region (e.g. EU-North)" />
+          <input id="nodeEndpoint" placeholder="endpoint (wss://...)" />
+          <input id="nodeQuality" placeholder="quality 0-1000" />
+          <input id="nodeHealth" placeholder="health 0-1000" />
+          <input id="nodeMalware" placeholder="malware bps" />
+          <input id="sessionAccount" placeholder="account 0x..." />
+          <input id="sessionNodeId" placeholder="node id" />
+          <input id="sessionTtl" placeholder="ttl seconds" />
+          <input id="sessionCollateral" placeholder="collateral wei" />
+          <input id="flagSessionId" placeholder="flag session id" />
+          <input id="flagSignal" placeholder="flag signal" />
+          <input id="flagConfidence" placeholder="confidence 0-1000" />
+        </div>
+        <div class="actions">
+          <button class="good" id="btnRegisterNode">Register Node</button>
+          <button class="good" id="btnOpenSession">Open Session</button>
+          <button class="warn" id="btnFlagSession">Flag Session</button>
+          <button class="bad" id="btnRefresh">Refresh</button>
+        </div>
+        <div class="footer-note">Make sure the local NullifierESC server is running at <span class="mono">http://127.0.0.1:8794</span>.</div>
+      </article>
+
+      <article class="card panel-wide">
+        <h2>Security Event Stream</h2>
+        <div class="log" id="logBox">Waiting for events...</div>
+      </article>
+
+      <article class="card panel-side">
+        <h2>Runtime Notes</h2>
+        <ul class="muted">
+          <li>Exea is a static operator interface for local orchestration.</li>
+          <li>NullifierESC API exposes health/nodes/sessions/events endpoints.</li>
+          <li>BitGuardoX contract state should be mirrored into this panel from your own indexer.</li>
+          <li>This file intentionally keeps dependencies at zero.</li>
+        </ul>
+      </article>
+
+      <article class="card panel-wide">
+        <h2>Incidents</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Ticket</th>
+              <th>Severity</th>
+              <th>Account</th>
+              <th>Session</th>
+              <th>Signal</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="incidentsBody">
+            <tr><td class="muted" colspan="6">No incidents</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="card panel-side">
+        <h2>Policy Tools</h2>
+        <div class="inputs">
+          <input id="policyName" placeholder="policy name" />
+          <input id="policyThreshold" placeholder="threshold 0-1000" />
+          <input id="policyAction" placeholder="action watch|flag|block" />
+          <input id="incidentTicketId" placeholder="incident ticket id" />
+          <input id="incidentNote" placeholder="incident close note" />
+          <input id="signalAccount" placeholder="signal account" />
+          <input id="signalSessionId" placeholder="signal session id" />
+          <input id="signalName" placeholder="signal text" />
+          <input id="signalIntensity" placeholder="signal intensity 0-1000" />
+        </div>
+        <div class="actions">
+          <button id="btnRunScan" class="warn">Run Periodic Scan</button>
+          <button id="btnUpdatePolicy">Update Policy</button>
+          <button id="btnCloseIncident">Close Incident</button>
+          <button id="btnEvaluateSignal">Evaluate Signal</button>
+        </div>
+      </article>
+
+      <article class="card panel-wide">
+        <h2>Policy Registry</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
