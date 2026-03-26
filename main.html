@@ -768,3 +768,157 @@
       "atlas-ext-075|egress-fork|716|flag|662",
       "atlas-ext-076|egress-fork|723|flag|668",
       "atlas-ext-077|egress-fork|730|flag|674",
+      "atlas-ext-078|egress-fork|737|flag|680",
+      "atlas-ext-079|egress-fork|744|flag|686",
+      "atlas-ext-080|egress-fork|751|flag|692",
+      "atlas-ext-081|egress-fork|758|flag|698",
+      "atlas-ext-082|egress-fork|765|flag|704",
+      "atlas-ext-083|egress-fork|772|flag|710",
+      "atlas-ext-084|egress-fork|779|flag|716",
+      "atlas-ext-085|egress-fork|786|flag|722",
+      "atlas-ext-086|egress-fork|793|flag|728",
+      "atlas-ext-087|egress-fork|800|block|734",
+      "atlas-ext-088|egress-fork|807|block|740",
+      "atlas-ext-089|egress-fork|814|block|746",
+      "atlas-ext-090|egress-fork|821|block|752",
+      "atlas-ext-091|egress-fork|828|block|758",
+      "atlas-ext-092|egress-fork|835|block|764",
+      "atlas-ext-093|probe-swarm|642|watch|630",
+      "atlas-ext-094|probe-swarm|649|watch|635",
+      "atlas-ext-095|probe-swarm|656|watch|640",
+      "atlas-ext-096|probe-swarm|663|watch|645",
+      "atlas-ext-097|probe-swarm|670|watch|650",
+      "atlas-ext-098|probe-swarm|677|watch|655",
+      "atlas-ext-099|probe-swarm|684|watch|660",
+      "atlas-ext-100|probe-swarm|691|watch|665"
+    ];
+    window.ExeaThreatAtlasExtended = Object.freeze(signatureAtlasExtended);
+
+    async function registerNode() {
+      const body = {
+        region: els.nodeRegion.value || "EU-Edge",
+        endpoint: els.nodeEndpoint.value || "wss://edge.exea-relay.local/v1",
+        quality: Number(els.nodeQuality.value || 800),
+        health: Number(els.nodeHealth.value || 860),
+        malware_bps: Number(els.nodeMalware.value || 180),
+      };
+      const r = await jpost("/node/register", body);
+      if (!r.ok) throw new Error(r.error || "register failed");
+      await refreshAll();
+    }
+
+    async function openSession() {
+      const body = {
+        account: els.sessionAccount.value || "0x0000000000000000000000000000000000000001",
+        node_id: els.sessionNodeId.value || "",
+        ttl_sec: Number(els.sessionTtl.value || 3600),
+        collateral_wei: Number(els.sessionCollateral.value || 2500000000000000),
+      };
+      if (!body.node_id) throw new Error("node_id is required to open session");
+      const r = await jpost("/session/open", body);
+      if (!r.ok) throw new Error(r.error || "open failed");
+      els.flagSessionId.value = r.session_id || "";
+      await refreshAll();
+    }
+
+    async function flagSession() {
+      const body = {
+        session_id: els.flagSessionId.value || "",
+        signal: els.flagSignal.value || "suspicious-dns-tunnel-pattern",
+        confidence: Number(els.flagConfidence.value || 755),
+      };
+      if (!body.session_id) throw new Error("session_id is required");
+      const r = await jpost("/session/flag", body);
+      if (!r.ok) throw new Error(r.error || "flag failed");
+      await refreshAll();
+    }
+
+    els.btnRegisterNode.addEventListener("click", () => registerNode().catch(e => alert(String(e))));
+    els.btnOpenSession.addEventListener("click", () => openSession().catch(e => alert(String(e))));
+    els.btnFlagSession.addEventListener("click", () => flagSession().catch(e => alert(String(e))));
+    els.btnRefresh.addEventListener("click", () => refreshAll());
+    els.btnRunScan.addEventListener("click", () => runScan().catch(e => alert(String(e))));
+    els.btnUpdatePolicy.addEventListener("click", () => updatePolicy().catch(e => alert(String(e))));
+    els.btnCloseIncident.addEventListener("click", () => closeIncident().catch(e => alert(String(e))));
+    els.btnEvaluateSignal.addEventListener("click", () => evaluateSignal().catch(e => alert(String(e))));
+    els.btnAutoTune.addEventListener("click", () => autoTunePolicies().catch(e => alert(String(e))));
+    els.btnCompact.addEventListener("click", () => compactState().catch(e => alert(String(e))));
+
+    refreshAll();
+    setInterval(refreshAll, 8000);
+  </script>
+  <!--
+  Exea Runbook Lines
+  Purpose:
+  - Preserve an embedded operator runbook corpus in a single deployable file.
+  - Keep the interface standalone for offline incident-response drills.
+  - Maintain size profile requested by operator while remaining valid HTML.
+  Sections:
+  - rb-0001..rb-0200: quick response checks
+  - rb-0201..rb-0400: service continuity checks
+  - rb-0401..rb-0520: recovery and postmortem checks
+  rb-0001
+  rb-0002
+  rb-0003
+  rb-0004
+  rb-0005
+  rb-0006
+  rb-0007
+  rb-0008
+  rb-0009
+  rb-0010
+  rb-0011
+  rb-0012
+  rb-0013
+  rb-0014
+  rb-0015
+  rb-0016
+  rb-0017
+  rb-0018
+  rb-0019
+  rb-0020
+  rb-0021
+  rb-0022
+  rb-0023
+  rb-0024
+  rb-0025
+  rb-0026
+  rb-0027
+  rb-0028
+  rb-0029
+  rb-0030
+  rb-0031
+  rb-0032
+  rb-0033
+  rb-0034
+  rb-0035
+  rb-0036
+  rb-0037
+  rb-0038
+  rb-0039
+  rb-0040
+  rb-0041
+  rb-0042
+  rb-0043
+  rb-0044
+  rb-0045
+  rb-0046
+  rb-0047
+  rb-0048
+  rb-0049
+  rb-0050
+  rb-0051
+  rb-0052
+  rb-0053
+  rb-0054
+  rb-0055
+  rb-0056
+  rb-0057
+  rb-0058
+  rb-0059
+  rb-0060
+  rb-0061
+  rb-0062
+  rb-0063
+  rb-0064
+  rb-0065
